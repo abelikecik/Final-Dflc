@@ -25,4 +25,4 @@ app.get("/{*splat}", (req, res) => {
 
 app.listen(port, "0.0.0.0", () => {
   console.log("Portal listening on " + port);
-});ex.html")));app.listen(port,"0.0.0.0",()=>console.log("Portal listening on "+port));
+});
