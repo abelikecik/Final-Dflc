@@ -17,4 +17,12 @@ app.post("/api/results",staff,async(req,res)=>{let {studentId,term,schoolYear,po
 app.post("/api/results/:id/publish",owner,async(req,res)=>{try{res.json((await pool.query("UPDATE results SET status='published',updated_at=NOW() WHERE id=$1 RETURNING id,status",[Number(req.params.id)])).rows[0]||{})}catch(e){res.status(500).json({error:"Could not publish result"})}});
 app.get("/api/results",staff,async(req,res)=>{try{let p=[],w="";if(req.session.user.role==="teacher"){p=[req.session.user.class_id];w="WHERE s.class_id=$1"}res.json((await pool.query(`SELECT r.id,s.register_no,s.full_name,c.name class_name,r.term,r.school_year,r.position,r.comments,r.status FROM results r JOIN students s ON s.id=r.student_id JOIN classes c ON c.id=s.class_id ${w} ORDER BY c.sort_order,s.register_no`,p)).rows)}catch(e){res.status(500).json({error:"Could not load results"})}});
 app.post("/api/login/parent",async(req,res)=>{try{let r=(await pool.query(`SELECT r.id,s.full_name,s.register_no,c.name class_name,r.term,r.school_year,r.position,r.comments,COALESCE(json_agg(json_build_object('subject',rs.subject,'ca',rs.ca,'exam',rs.exam,'total',rs.ca+rs.exam) ORDER BY rs.subject) FILTER(WHERE rs.id IS NOT NULL),'[]') scores FROM results r JOIN students s ON s.id=r.student_id JOIN classes c ON c.id=s.class_id LEFT JOIN result_scores rs ON rs.result_id=r.id WHERE c.name=$1 AND r.term=$2 AND s.register_no=$3 AND r.school_year=$4 AND r.status='published' GROUP BY r.id,s.full_name,s.register_no,c.name,r.term,r.school_year,r.position,r.comments`,[req.body.className,req.body.term,Number(req.body.registerNo),Number(req.body.year)])).rows[0];if(!r)return res.status(404).json({error:"Published result not found"});let a=r.scores.map(x=>Number(x.total));r.total=a.reduce((x,y)=>x+y,0);r.average=a.length?r.total/a.length:0;res.json(r)}catch(e){res.status(500).json({error:"Lookup failed"})}});
-app.use(express.static(path.join(__dirname,"public")));app.get("*",(req,res)=>res.sendFile(path.join(__dirname,"public","index.html")));app.listen(port,"0.0.0.0",()=>console.log("Portal listening on "+port));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/{*splat}", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.listen(port, "0.0.0.0", () => {
+  console.log("Portal listening on " + port);
+});ex.html")));app.listen(port,"0.0.0.0",()=>console.log("Portal listening on "+port));
